@@ -1,8 +1,15 @@
-export function add(a: number, b: number): number {
-  return a + b;
+import { PrintUsage } from './src/usage.ts'
+
+function main(args: string[]) {
+  const arg = args[0] ?? ''
+  switch (arg) {
+    case 'h':
+    default: {
+      PrintUsage()
+    }
+  }
 }
 
-// Learn more at https://deno.land/manual/examples/module_metadata#concepts
 if (import.meta.main) {
-  console.log("Add 2 + 3 =", add(2, 3));
+  main(Deno.args)
 }

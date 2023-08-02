@@ -1,7 +1,15 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts",
+    "run": "deno run main.ts",
     "clean": "rm -f sn",
     "build": "deno task clean && deno compile -o sn main.ts"
+  },
+  "fmt": {
+    "options": {
+      "useTabs": false,
+      "indentWidth": 2,
+      "singleQuote": true,
+      "semiColons": false
+    }
   }
 }
