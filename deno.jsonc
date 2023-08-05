@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "run": "deno run main.ts",
+    "run": "deno run main.ts local",
     "clean": "rm -f sn",
-    "build": "deno task clean && deno compile -o sn main.ts"
+    "build": "deno task clean && deno compile -o sn main.ts -- production"
   },
   "fmt": {
     "options": {
