@@ -13,5 +13,5 @@ Commands:
   r           Reset and refetch all notes from server
   u           Upload note changes to server
 `,
-  )
+  );
 }

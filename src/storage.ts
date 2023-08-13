@@ -1,44 +1,44 @@
-import { path } from '../deps.ts'
-import { logDebug } from './logger.ts'
+import { path } from "../deps.ts";
+import { logDebug } from "./logger.ts";
 
 export type LocalStorage = {
-  filename: string
+  filename: string;
   // change version
-  cv?: string
+  cv?: string;
   // auth token
-  at?: string
+  at?: string;
   // notes
-  ns?: Record<string, string>
-}
+  ns?: Record<string, string>;
+};
 
 export async function newLocalStorage(name: string): Promise<LocalStorage> {
-  let storageDir = Deno.env.get('XDG_DATA_HOME')
+  let storageDir = Deno.env.get("XDG_DATA_HOME");
   if (!storageDir) {
-    const homeDir = Deno.env.get('HOME')
+    const homeDir = Deno.env.get("HOME");
     if (homeDir) {
-      storageDir = homeDir + '/.local/share'
+      storageDir = homeDir + "/.local/share";
     } else {
-      storageDir = '~/.local/share'
+      storageDir = "~/.local/share";
     }
   }
 
-  const filename = storageDir + '/' + name + '.json'
+  const filename = storageDir + "/" + name + ".json";
 
-  Deno.mkdir(path.dirname(filename), { recursive: true })
+  Deno.mkdir(path.dirname(filename), { recursive: true });
 
-  let data = '{}'
+  let data = "{}";
   try {
-    const raw = await Deno.readFile(filename)
-    data = new TextDecoder().decode(raw)
+    const raw = await Deno.readFile(filename);
+    data = new TextDecoder().decode(raw);
   } catch {
-    logDebug(`No local storage data found in ${filename}.`)
+    logDebug(`No local storage data found in ${filename}.`);
   }
 
-  const storage: LocalStorage = JSON.parse(data)
-  storage.filename = filename
+  const storage: LocalStorage = JSON.parse(data);
+  storage.filename = filename;
   if (!storage.ns) {
-    storage.ns = {}
+    storage.ns = {};
   }
 
-  return storage
+  return storage;
 }

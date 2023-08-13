@@ -1,3 +1,3 @@
 export function Clear() {
-  console.log('TODO clear')
+  console.log("TODO clear");
 }
