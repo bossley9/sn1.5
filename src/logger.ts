@@ -4,6 +4,10 @@ export function logDebug(...args: unknown[]) {
   }
 }
 
+export function logInfo(...args: unknown[]) {
+  console.log('%cINFO', 'color: cyan', ...args)
+}
+
 export function logFatal(error: Error) {
   console.error(`%cFatal ${error.stack}`, 'color: red')
   Deno.exit(1)
