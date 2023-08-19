@@ -4,4 +4,5 @@ export type Client = {
   projectDir: string;
   versionDir: string;
   storage: LocalStorage;
+  connection: WebSocket | null;
 };

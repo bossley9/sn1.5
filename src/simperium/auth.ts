@@ -1,4 +1,4 @@
-import { API_KEY, APP_ID } from "../constants.ts";
+import { API_KEY, APP_ID } from "./constants.ts";
 import { apiFetch } from "../apifetch.ts";
 
 // https://simperium.com/docs/reference/http/#auth

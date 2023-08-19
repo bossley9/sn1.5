@@ -19,5 +19,6 @@ export async function newClient(): Promise<Client> {
     projectDir,
     versionDir,
     storage,
+    connection: null,
   };
 }

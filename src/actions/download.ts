@@ -11,6 +11,6 @@ export async function Download() {
   const changeVersion = client.storage.cv || "";
   if (changeVersion.length === 0) {
     logInfo("Change version not found. Making fresh sync...");
-    await initialSync(client);
+    initialSync(client);
   }
 }
