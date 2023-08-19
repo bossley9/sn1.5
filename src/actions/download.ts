@@ -1,10 +1,16 @@
 import { logDebug, logInfo } from "../logger.ts";
-import { Authenticate, newClient } from "../client.ts";
+import { newClient } from "../client/newClient.ts";
+import { authenticate } from "../client/auth.ts";
+import { initialSync } from "../client/initialSync.ts";
 
 export async function Download() {
   logInfo("Downloading...");
   const client = await newClient();
-  await Authenticate(client);
+  await authenticate(client);
 
-  logDebug(`Auth token is ${client.storage.at}.`);
+  const changeVersion = client.storage.cv || "";
+  if (changeVersion.length === 0) {
+    logInfo("Change version not found. Making fresh sync...");
+    await initialSync(client);
+  }
 }
