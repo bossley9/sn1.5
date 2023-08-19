@@ -1,11 +1,15 @@
 export function logDebug(...args: unknown[]) {
   if (Deno.args[0] !== "production") {
-    console.debug("%cDEBUG", "color: magenta", ...args);
+    console.debug("%cDebug", "color: magenta", ...args);
   }
 }
 
 export function logInfo(...args: unknown[]) {
-  console.log("%cINFO", "color: cyan", ...args);
+  console.log("%cInfo", "color: cyan", ...args);
+}
+
+export function logError(...args: unknown[]) {
+  console.log("%cError", "color: red", ...args);
 }
 
 export function logFatal(error: Error) {

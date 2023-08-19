@@ -1,5 +1,5 @@
-import { LocalStorage, newLocalStorage } from "./storage.ts";
-import { logFatal, logInfo } from "./logger.ts";
+import { getLocalStorage, LocalStorage, writeLocalStorage } from "./storage.ts";
+import { logError, logInfo } from "./logger.ts";
 import { authorize } from "./simperium/auth.ts";
 
 type Client = {
@@ -9,7 +9,7 @@ type Client = {
 };
 
 export async function newClient(): Promise<Client> {
-  const storage = await newLocalStorage("sn");
+  const storage = await getLocalStorage();
 
   // initializing project directory
   const homeDir = Deno.env.get("HOME") || ".";
@@ -43,10 +43,13 @@ export async function Authenticate(client: Client) {
   try {
     accessToken = await authorize(username, password);
   } catch (e) {
-    logFatal(e);
+    logError(e);
+    logInfo("Retrying...");
+    Authenticate(client);
   }
 
   client.storage.at = accessToken;
+  writeLocalStorage(client.storage);
 }
 
 type Credentials = { username: string; password: string };
