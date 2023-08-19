@@ -1,4 +1,4 @@
-import { logDebug, logInfo } from "../logger.ts";
+import { logInfo } from "../logger.ts";
 import { newClient } from "../client/newClient.ts";
 import { authenticate } from "../client/auth.ts";
 import { initialSync } from "../client/initialSync.ts";
