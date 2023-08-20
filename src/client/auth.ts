@@ -1,12 +1,12 @@
-import { writeLocalStorage } from "../storage.ts";
 import { logDebug, logError, logInfo } from "../logger.ts";
 import { authorize } from "../simperium/auth.ts";
 import { Client } from "./types.ts";
 
 export async function authenticate(client: Client) {
   logInfo("Authenticating...");
-  if (client.storage.at) {
-    logDebug({ authToken: client.storage.at });
+  const at = client.storage.get<string>("at");
+  if (at) {
+    logDebug({ authToken: at });
     logInfo("Authentication token found.");
     return;
   }
@@ -23,9 +23,8 @@ export async function authenticate(client: Client) {
     authenticate(client);
   }
 
-  client.storage.at = accessToken;
-  logDebug({ authToken: client.storage.at });
-  await writeLocalStorage(client.storage);
+  logDebug({ authToken: accessToken });
+  await client.storage.set("at", accessToken);
 }
 
 type Credentials = { username: string; password: string };

@@ -1,8 +1,8 @@
-import { getLocalStorage } from "../storage.ts";
+import { Storage } from "../storage.ts";
 import { Client } from "./types.ts";
 
 export async function newClient(): Promise<Client> {
-  const storage = await getLocalStorage();
+  const storage = new Storage("sn");
 
   // initializing project directory
   const homeDir = Deno.env.get("HOME") || ".";
