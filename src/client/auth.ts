@@ -1,5 +1,4 @@
 import { logDebug, logError, logInfo } from "../logger.ts";
-import { authorize } from "../simperium/auth.ts";
 import { Client } from "./types.ts";
 
 export async function authenticate(client: Client) {
@@ -16,7 +15,7 @@ export async function authenticate(client: Client) {
 
   logInfo("Authorizing...");
   try {
-    accessToken = await authorize(username, password);
+    accessToken = await client.simp.authorize(username, password);
   } catch (e) {
     logError(e);
     logInfo("Retrying...");
