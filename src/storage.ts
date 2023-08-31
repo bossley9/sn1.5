@@ -1,4 +1,5 @@
 import { path } from "../deps.ts";
+import { logDebug } from "./logger.ts";
 
 export class Storage {
   private filename: string;
@@ -6,11 +7,16 @@ export class Storage {
 
   constructor(storageName: string) {
     const rootDir = getDataDirectory();
-    this.filename = `${rootDir}/${storageName}.json`;
+    this.filename = `${rootDir}/${storageName}/${storageName}.json`;
 
     Deno.mkdirSync(path.dirname(this.filename), { recursive: true });
-    const raw = Deno.readFileSync(this.filename);
-    this.data = JSON.parse(new TextDecoder().decode(raw));
+    logDebug(`Reading data stored in ${this.filename}...`);
+    if (isFileReadable(this.filename)) {
+      const raw = Deno.readFileSync(this.filename);
+      this.data = JSON.parse(new TextDecoder().decode(raw));
+    } else {
+      this.data = {};
+    }
   }
 
   get<T = unknown>(key: string): T | null {
@@ -23,6 +29,21 @@ export class Storage {
   async set(key: string, value: unknown) {
     this.data[key] = value;
     await Deno.writeTextFile(this.filename, JSON.stringify(this.data));
+  }
+
+  async reset() {
+    if (isFileReadable(this.filename)) {
+      await Deno.remove(this.filename);
+    }
+  }
+}
+
+function isFileReadable(filename: string) {
+  try {
+    const finfo = Deno.statSync(filename);
+    return finfo.isFile || finfo.isSymlink;
+  } catch {
+    return false;
   }
 }
 
