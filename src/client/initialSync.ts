@@ -1,9 +1,15 @@
+import { logFatal } from "../logger.ts";
 import { Client } from "./types.ts";
 
 export function initialSync(client: Client) {
-  client.simp.connect();
+  const at = client.storage.get<string>("at");
+  if (!at) {
+    logFatal(new Error("Unable to find authentication token."));
+    return;
+  }
+  client.simp.connect(at);
 
-  // TODO
-
-  client.simp.disconnect();
+  setTimeout(() => {
+    client.simp.disconnect();
+  }, 3000);
 }

@@ -1,4 +1,5 @@
 import { apiFetch } from "../apifetch.ts";
+import { logDebug } from "../logger.ts";
 
 // https://simperium.com/docs/reference/http/#auth
 type AuthorizeResponse = {
@@ -38,13 +39,39 @@ export class Simperium {
     return data.access_token;
   }
 
-  connect() {
+  public connect(authToken: string) {
     this.connection = new WebSocket(
       "wss://api.simperium.com/sock/1/" + this.APP_ID + "/websocket",
     );
+    this.connection.addEventListener("message", this.handleMessage);
+    this.connection.addEventListener("open", () => {
+      const initMessage = this.createInitMessage(authToken);
+      this.sendMessage(initMessage);
+    });
   }
 
-  disconnect() {
+  public disconnect() {
     this.connection?.close();
+  }
+
+  private handleMessage(e: MessageEvent) {
+    logDebug(`R ${e.data}`);
+  }
+
+  private sendMessage(message: string) {
+    logDebug(`W ${message}`);
+    this.connection?.send(message);
+  }
+
+  private createInitMessage(authToken: string) {
+    return "0:init:" + JSON.stringify({
+      clientid: "node",
+      api: 1.1,
+      token: authToken,
+      app_id: this.APP_ID,
+      name: "note",
+      library: "node-simperium",
+      version: "0.0.1",
+    });
   }
 }
