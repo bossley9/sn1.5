@@ -1,13 +1,8 @@
 import { apiFetch } from "../apifetch.ts";
 import { logDebug } from "../logger.ts";
+import type { AuthorizeResponse } from "./types.ts";
 
-// https://simperium.com/docs/reference/http/#auth
-type AuthorizeResponse = {
-  access_token: string;
-  userid: string;
-  username: string;
-};
-
+// See https://simperium.com/docs/websocket/ for more information.
 export class Simperium {
   // from the official Simplenote web application
   private API_KEY = "26864ab5d6fd4a37b80343439f107350";
@@ -39,11 +34,22 @@ export class Simperium {
     return data.access_token;
   }
 
-  public connect(authToken: string) {
+  /**
+   * Ensure a connection with Simperium is established. If a connection already
+   * exists, do nothing.
+   */
+  public ensureConnection(authToken: string) {
+    if (this.connection) {
+      return;
+    }
+
     this.connection = new WebSocket(
-      "wss://api.simperium.com/sock/1/" + this.APP_ID + "/websocket",
+      `wss://api.simperium.com/sock/1/${this.APP_ID}/websocket`,
     );
     this.connection.addEventListener("message", this.handleMessage);
+    this.connection.addEventListener("close", () => {
+      this.connection = null;
+    });
     this.connection.addEventListener("open", () => {
       const initMessage = this.createInitMessage(authToken);
       this.sendMessage(initMessage);

@@ -7,7 +7,7 @@ export function initialSync(client: Client) {
     logFatal(new Error("Unable to find authentication token."));
     return;
   }
-  client.simp.connect(at);
+  client.simp.ensureConnection(at);
 
   setTimeout(() => {
     client.simp.disconnect();

@@ -1,6 +1,6 @@
 import { Simperium } from "../simperium/simperium.ts";
 import { Storage } from "../storage.ts";
-import { Client } from "./types.ts";
+import type { Client } from "./types.ts";
 
 export async function newClient(): Promise<Client> {
   // initializing project directory
