@@ -38,7 +38,7 @@ export class Simperium {
    * Ensure a connection with Simperium is established. If a connection already
    * exists, do nothing.
    */
-  public ensureConnection(authToken: string) {
+  public async ensureConnection(authToken: string) {
     if (this.connection) {
       return;
     }
@@ -47,37 +47,52 @@ export class Simperium {
       `wss://api.simperium.com/sock/1/${this.APP_ID}/websocket`,
     );
     this.connection.addEventListener("message", this.handleMessage);
-    this.connection.addEventListener("close", () => {
-      this.connection = null;
-    });
-    this.connection.addEventListener("open", () => {
-      const initMessage = this.createInitMessage(authToken);
-      this.sendMessage(initMessage);
+
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error("Connection timed out."));
+      }, 5000);
+
+      this.connection?.addEventListener("open", () => {
+        this.sendMessage(
+          "0:init:" + JSON.stringify({
+            clientid: "node",
+            api: 1.1,
+            token: authToken,
+            app_id: this.APP_ID,
+            name: "note",
+            library: "node-simperium",
+            version: "0.0.1",
+          }),
+        );
+      });
+      this.connection?.addEventListener("message", (e: MessageEvent) => {
+        const message = String(e.data);
+        if (message.startsWith("0:auth:")) {
+          const response = message.substring(7);
+          if (!response.startsWith("{")) {
+            clearTimeout(timer);
+            resolve();
+          } else {
+            const data = JSON.parse(response);
+            reject(new Error(data.msg));
+          }
+        }
+      });
     });
   }
 
   public disconnect() {
     this.connection?.close();
+    this.connection = null;
   }
 
   private handleMessage(e: MessageEvent) {
     logDebug(`R ${e.data}`);
   }
 
-  private sendMessage(message: string) {
+  sendMessage(message: string) {
     logDebug(`W ${message}`);
     this.connection?.send(message);
-  }
-
-  private createInitMessage(authToken: string) {
-    return "0:init:" + JSON.stringify({
-      clientid: "node",
-      api: 1.1,
-      token: authToken,
-      app_id: this.APP_ID,
-      name: "note",
-      library: "node-simperium",
-      version: "0.0.1",
-    });
   }
 }
