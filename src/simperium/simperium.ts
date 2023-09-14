@@ -1,6 +1,6 @@
 import { apiFetch } from "../apifetch.ts";
 import { logDebug } from "../logger.ts";
-import type { AuthorizeResponse, IndexResponse } from "./types.ts";
+import type { AuthorizeResponse, IndexResponse, NoteData } from "./types.ts";
 
 // See https://simperium.com/docs/websocket/ for more information.
 export class Simperium {
@@ -72,6 +72,9 @@ export class Simperium {
     });
   }
 
+  /**
+   * Closes the Simperium connection.
+   */
   public disconnect() {
     this.connection?.close();
     this.connection = null;
@@ -108,6 +111,13 @@ export class Simperium {
     this.sendMessage(`0:i:${data}:${offset}:${mark}:${rLimit}`);
   }
 
+  /**
+   * https://simperium.com/docs/websocket/#heartbeat-h
+   */
+  public sendHeartbeatMessage(index: number) {
+    this.sendMessage(`h:${index}`);
+  }
+
   private sendMessage(message: string) {
     logDebug(`W ${message}`);
     this.connection?.send(message);
@@ -131,11 +141,19 @@ export class Simperium {
           break;
         }
         case "i": {
-          const data: IndexResponse = JSON.parse(
+          const data: IndexResponse<NoteData> = JSON.parse(
             dataNoChannel.substring("i:".length),
           );
+          const shouldReturnData = Boolean(
+            data.index.length && data.index[0].d,
+          );
           if (data.mark) {
-            this.sendIndexMessage(data.index.length, false, data.mark, "");
+            this.sendIndexMessage(
+              data.index.length,
+              shouldReturnData,
+              data.mark,
+              "",
+            );
           }
           break;
         }
@@ -144,7 +162,18 @@ export class Simperium {
         }
       }
     } else {
-      logDebug(`Unhandled message ${raw}`);
+      switch (raw[0]) {
+        case "h": {
+          const index = Number(raw.substring("h:".length));
+          setTimeout(() => {
+            this.sendHeartbeatMessage(index + 1);
+          }, 10000);
+          break;
+        }
+        default: {
+          logDebug(`Unhandled message ${raw}`);
+        }
+      }
     }
   };
 }
