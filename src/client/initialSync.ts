@@ -13,7 +13,10 @@ export async function initialSync(client: Client) {
     logFatal(e);
   }
 
+  const maxParallelNotes = 30;
+  client.simp.sendIndexMessage(maxParallelNotes);
+
   setTimeout(() => {
     client.simp.disconnect();
-  }, 3000);
+  }, 10000);
 }

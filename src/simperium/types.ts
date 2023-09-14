@@ -4,3 +4,12 @@ export type AuthorizeResponse = {
   userid: string;
   username: string;
 };
+
+export type IndexResponse = {
+  current: string;
+  index: {
+    id: string;
+    v: string;
+  }[];
+  mark?: string;
+};

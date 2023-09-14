@@ -1,6 +1,6 @@
 import { apiFetch } from "../apifetch.ts";
 import { logDebug } from "../logger.ts";
-import type { AuthorizeResponse } from "./types.ts";
+import type { AuthorizeResponse, IndexResponse } from "./types.ts";
 
 // See https://simperium.com/docs/websocket/ for more information.
 export class Simperium {
@@ -54,17 +54,7 @@ export class Simperium {
       }, 5000);
 
       this.connection?.addEventListener("open", () => {
-        this.sendMessage(
-          "0:init:" + JSON.stringify({
-            clientid: "node",
-            api: 1.1,
-            token: authToken,
-            app_id: this.APP_ID,
-            name: "note",
-            library: "node-simperium",
-            version: "0.0.1",
-          }),
-        );
+        this.sendInitMessage(authToken);
       });
       this.connection?.addEventListener("message", (e: MessageEvent) => {
         const message = String(e.data);
@@ -87,12 +77,74 @@ export class Simperium {
     this.connection = null;
   }
 
-  private handleMessage(e: MessageEvent) {
-    logDebug(`R ${e.data}`);
+  /**
+   * https://simperium.com/docs/websocket/#authorizing-init
+   */
+  private sendInitMessage(authToken: string) {
+    this.sendMessage(
+      "0:init:" + JSON.stringify({
+        clientid: "node",
+        api: 1.1,
+        token: authToken,
+        app_id: this.APP_ID,
+        name: "note",
+        library: "node-simperium",
+        version: "0.0.1",
+      }),
+    );
   }
 
-  sendMessage(message: string) {
+  /**
+   * https://simperium.com/docs/websocket/#index-i
+   */
+  public sendIndexMessage(
+    limit: number,
+    shouldReturnData = false,
+    offset = "",
+    mark = "",
+  ) {
+    const data = shouldReturnData ? "1" : "";
+    const rLimit = limit - 1; // limit is 0-indexed
+    this.sendMessage(`0:i:${data}:${offset}:${mark}:${rLimit}`);
+  }
+
+  private sendMessage(message: string) {
     logDebug(`W ${message}`);
     this.connection?.send(message);
   }
+
+  private handleMessage = (e: MessageEvent) => {
+    const raw = String(e.data);
+    logDebug(`R ${raw}`);
+
+    if (raw.startsWith("0:")) {
+      const dataNoChannel = raw.substring("0:".length);
+      const messageType = dataNoChannel.substring(
+        0,
+        dataNoChannel.indexOf(":"),
+      );
+
+      switch (messageType) {
+        case "auth":
+        case "o": {
+          // silently ignore informational messages
+          break;
+        }
+        case "i": {
+          const data: IndexResponse = JSON.parse(
+            dataNoChannel.substring("i:".length),
+          );
+          if (data.mark) {
+            this.sendIndexMessage(data.index.length, false, data.mark, "");
+          }
+          break;
+        }
+        default: {
+          logDebug(`Unhandled message type ${messageType}`);
+        }
+      }
+    } else {
+      logDebug(`Unhandled message ${raw}`);
+    }
+  };
 }
