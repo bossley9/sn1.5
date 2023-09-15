@@ -13,6 +13,10 @@ export async function initialSync(client: Client) {
     logFatal(e);
   }
 
-  const maxParallelNotes = 30;
-  client.simp.sendIndexMessage(maxParallelNotes, true);
+  client.simp.sendIndexMessage({
+    limit: 30,
+    shouldReturnData: true,
+  });
+
+  await client.simp.settleAllMessages();
 }

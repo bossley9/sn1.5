@@ -1,6 +1,11 @@
 import { apiFetch } from "../apifetch.ts";
 import { logDebug } from "../logger.ts";
-import type { AuthorizeResponse, IndexResponse, NoteData } from "./types.ts";
+import type {
+  AuthorizeResponse,
+  IndexMessageProps,
+  IndexResponse,
+  NoteData,
+} from "./types.ts";
 
 // See https://simperium.com/docs/websocket/ for more information.
 export class Simperium {
@@ -9,13 +14,18 @@ export class Simperium {
   private APP_ID = "chalk-bump-f49";
   private connection: WebSocket | null;
   private heartbeatTimer: ReturnType<typeof setTimeout> | null;
+  private messageQueue: boolean[];
 
   constructor() {
     this.connection = null;
     this.heartbeatTimer = null;
+    this.messageQueue = [];
   }
 
-  async authorize(
+  /**
+   * https://simperium.com/docs/reference/http/#auth
+   */
+  public async authorize(
     username: string,
     password: string,
   ): Promise<string> {
@@ -107,15 +117,11 @@ export class Simperium {
   /**
    * https://simperium.com/docs/websocket/#index-i
    */
-  public sendIndexMessage(
-    limit: number,
-    shouldReturnData = false,
-    offset = "",
-    mark = "",
-  ) {
+  public sendIndexMessage(props: IndexMessageProps) {
+    const { limit, shouldReturnData, offset = "" } = props;
     const data = shouldReturnData ? "1" : "";
     const rLimit = limit - 1; // limit is 0-indexed
-    this.sendMessage(`0:i:${data}:${offset}:${mark}:${rLimit}`);
+    this.sendMessage(`0:i:${data}:${offset}::${rLimit}`);
   }
 
   /**
@@ -128,6 +134,7 @@ export class Simperium {
   private sendMessage(message: string) {
     logDebug(`W ${message}`);
     this.connection?.send(message);
+    this.messageQueue.push(true);
   }
 
   private handleMessage = (e: MessageEvent) => {
@@ -157,10 +164,11 @@ export class Simperium {
           // TODO write data to storage
           if (data.mark) {
             this.sendIndexMessage(
-              data.index.length,
-              shouldReturnData,
-              data.mark,
-              "",
+              {
+                limit: data.index.length,
+                shouldReturnData,
+                offset: data.mark,
+              },
             );
           }
           break;
@@ -186,5 +194,22 @@ export class Simperium {
         }
       }
     }
+    this.messageQueue.pop();
   };
+
+  /**
+   * Treats the websocket connection like a synchronous queue.
+   * This will return when all pending sent messages have
+   * received a response.
+   */
+  public settleAllMessages() {
+    return new Promise<void>((resolve) => {
+      const settledTimer = setInterval(() => {
+        if (this.messageQueue.length === 0) {
+          clearInterval(settledTimer);
+          resolve();
+        }
+      }, 800);
+    });
+  }
 }

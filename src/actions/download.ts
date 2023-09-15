@@ -14,7 +14,5 @@ export async function Download() {
     await initialSync(client);
   }
 
-  setTimeout(() => {
-    client.simp.disconnect();
-  }, 10000);
+  client.simp.disconnect();
 }
