@@ -8,9 +8,11 @@ export class Simperium {
   private API_KEY = "26864ab5d6fd4a37b80343439f107350";
   private APP_ID = "chalk-bump-f49";
   private connection: WebSocket | null;
+  private heartbeatTimer: ReturnType<typeof setTimeout> | null;
 
   constructor() {
     this.connection = null;
+    this.heartbeatTimer = null;
   }
 
   async authorize(
@@ -62,6 +64,7 @@ export class Simperium {
           const response = message.substring(7);
           if (!response.startsWith("{")) {
             clearTimeout(timer);
+            this.sendHeartbeatMessage(0);
             resolve();
           } else {
             const data = JSON.parse(response);
@@ -76,6 +79,10 @@ export class Simperium {
    * Closes the Simperium connection.
    */
   public disconnect() {
+    if (this.heartbeatTimer) {
+      clearTimeout(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     this.connection?.close();
     this.connection = null;
   }
@@ -114,7 +121,7 @@ export class Simperium {
   /**
    * https://simperium.com/docs/websocket/#heartbeat-h
    */
-  public sendHeartbeatMessage(index: number) {
+  private sendHeartbeatMessage(index: number) {
     this.sendMessage(`h:${index}`);
   }
 
@@ -147,6 +154,7 @@ export class Simperium {
           const shouldReturnData = Boolean(
             data.index.length && data.index[0].d,
           );
+          // TODO write data to storage
           if (data.mark) {
             this.sendIndexMessage(
               data.index.length,
@@ -165,9 +173,12 @@ export class Simperium {
       switch (raw[0]) {
         case "h": {
           const index = Number(raw.substring("h:".length));
-          setTimeout(() => {
+          this.heartbeatTimer = setTimeout(() => {
             this.sendHeartbeatMessage(index + 1);
-          }, 10000);
+            // Simperium expects heartbeats to be sent after
+            // 20 seconds of idle time, but they can just be
+            // sent at regular intervals
+          }, 20000);
           break;
         }
         default: {
