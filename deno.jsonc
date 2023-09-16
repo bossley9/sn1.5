@@ -2,6 +2,6 @@
   "tasks": {
     "run": "deno run -A main.ts local",
     "clean": "rm -f sn",
-    "build": "deno task clean && deno compile -o sn main.ts --allow-net --allow-env --allow-read --allow-write -- production"
+    "build": "deno task clean && deno compile -o sn main.ts --allow-net --allow-env --allow-read --allow-write --allow-run -- production"
   }
 }
