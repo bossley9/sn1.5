@@ -1,7 +1,7 @@
 import { logInfo } from "../logger.ts";
 import { newClient } from "../client/newClient.ts";
 import { authenticate } from "../client/auth.ts";
-import { initialSync } from "../client/initialSync.ts";
+import { initialSync } from "../client/sync.ts";
 
 export async function Reset() {
   const client = await newClient();

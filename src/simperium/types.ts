@@ -30,3 +30,5 @@ export type NoteData = {
   modificationDate: number;
   creationDate: number;
 };
+
+export type HandledData = IndexResponse<NoteData> & { type: "index" };

@@ -1,5 +1,6 @@
 import { Simperium } from "../simperium/simperium.ts";
 import { Storage } from "../storage.ts";
+import { handleData } from "./handleData.ts";
 import type { Client } from "./types.ts";
 
 export async function newClient(): Promise<Client> {
@@ -14,10 +15,14 @@ export async function newClient(): Promise<Client> {
   const versionDir = projectDir + "/.git/version";
   await Deno.mkdir(versionDir, { recursive: true });
 
+  const storage = new Storage("sn");
+  const simp = new Simperium();
+  simp.setDataHandler(async (data) => await handleData({ data, storage }));
+
   return {
     projectDir,
     versionDir,
-    storage: new Storage("sn"),
-    simp: new Simperium(),
+    storage,
+    simp,
   };
 }

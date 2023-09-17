@@ -2,6 +2,7 @@ import { apiFetch } from "../apifetch.ts";
 import { logDebug } from "../logger.ts";
 import type {
   AuthorizeResponse,
+  HandledData,
   IndexMessageProps,
   IndexResponse,
   NoteData,
@@ -15,6 +16,7 @@ export class Simperium {
   private connection: WebSocket | null;
   private heartbeatTimer: ReturnType<typeof setTimeout> | null;
   private messageQueue: boolean[];
+  private dataHandler?: (data: HandledData) => Promise<void>;
 
   constructor() {
     this.connection = null;
@@ -137,7 +139,7 @@ export class Simperium {
     this.messageQueue.push(true);
   }
 
-  private handleMessage = (e: MessageEvent) => {
+  private handleMessage = async (e: MessageEvent) => {
     const raw = String(e.data);
     logDebug(`R ${raw}`);
 
@@ -161,7 +163,6 @@ export class Simperium {
           const shouldReturnData = Boolean(
             data.index.length && data.index[0].d,
           );
-          // TODO write data to storage
           if (data.mark) {
             this.sendIndexMessage(
               {
@@ -171,6 +172,7 @@ export class Simperium {
               },
             );
           }
+          await this.dataHandler?.({ ...data, type: "index" });
           break;
         }
         default: {
@@ -196,6 +198,13 @@ export class Simperium {
     }
     this.messageQueue.pop();
   };
+
+  /**
+   * Set a custom data handler to receive incoming server data messages.
+   */
+  public setDataHandler(handler: (data: HandledData) => Promise<void>) {
+    this.dataHandler = handler;
+  }
 
   /**
    * Treats the websocket connection like a synchronous queue.
