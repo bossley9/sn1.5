@@ -17,12 +17,15 @@ export async function newClient(): Promise<Client> {
 
   const storage = new Storage("sn");
   const simp = new Simperium();
-  simp.setDataHandler(async (data) => await handleData({ data, storage }));
 
-  return {
+  const client: Client = {
     projectDir,
     versionDir,
     storage,
     simp,
   };
+
+  simp.setDataHandler(async (data) => await handleData({ data, client }));
+
+  return client;
 }

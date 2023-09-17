@@ -1,11 +1,12 @@
 import { apiFetch } from "../apifetch.ts";
-import { logDebug } from "../logger.ts";
+import { logDebug, logError } from "../logger.ts";
 import type {
   AuthorizeResponse,
+  Change,
   HandledData,
   IndexMessageProps,
   IndexResponse,
-  NoteData,
+  Note,
 } from "./types.ts";
 
 // See https://simperium.com/docs/websocket/ for more information.
@@ -127,6 +128,13 @@ export class Simperium {
   }
 
   /**
+   * https://simperium.com/docs/websocket/#index-change-version-cv
+   */
+  public sendChangeVersionMessage(changeVersion: string) {
+    this.sendMessage(`0:cv:${changeVersion}`);
+  }
+
+  /**
    * https://simperium.com/docs/websocket/#heartbeat-h
    */
   private sendHeartbeatMessage(index: number) {
@@ -156,8 +164,20 @@ export class Simperium {
           // silently ignore informational messages
           break;
         }
+        case "cv": {
+          const message = dataNoChannel.substring("cv:".length);
+          await this.dataHandler?.({ message, type: "cv" });
+          break;
+        }
+        case "c": {
+          const changes: Change<Note>[] = JSON.parse(
+            dataNoChannel.substring("c:".length),
+          );
+          await this.dataHandler?.({ changes, type: "c" });
+          break;
+        }
         case "i": {
-          const data: IndexResponse<NoteData> = JSON.parse(
+          const data: IndexResponse<Note> = JSON.parse(
             dataNoChannel.substring("i:".length),
           );
           const shouldReturnData = Boolean(
@@ -176,7 +196,7 @@ export class Simperium {
           break;
         }
         default: {
-          logDebug(`Unhandled message type ${messageType}`);
+          logError(`Unhandled message type ${messageType}`);
         }
       }
     } else {
@@ -192,7 +212,7 @@ export class Simperium {
           break;
         }
         default: {
-          logDebug(`Unhandled message ${raw}`);
+          logError(`Unhandled message ${raw}`);
         }
       }
     }

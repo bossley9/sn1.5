@@ -1,21 +1,12 @@
 import { logInfo } from "../logger.ts";
 import { newClient } from "../client/newClient.ts";
 import { authenticate } from "../client/auth.ts";
-import { initialSync } from "../client/sync.ts";
+import { sync } from "../client/sync.ts";
 
 export async function Open() {
   const client = await newClient();
   await authenticate(client);
-
-  logInfo("Syncing client...");
-  const changeVersion = client.storage.get<string>("cv") || "";
-  if (changeVersion.length === 0) {
-    logInfo("Change version not found. Making fresh sync...");
-    await initialSync(client);
-  }
-  // TODO update when change version exists
-
-  logInfo("Done.");
+  await sync(client);
 
   logInfo("Opening editor...");
   const editor = Deno.env.get("EDITOR") || "nvim";

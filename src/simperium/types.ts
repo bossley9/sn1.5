@@ -20,7 +20,7 @@ export type IndexResponse<T> = {
   mark?: string;
 };
 
-export type NoteData = {
+export type Note = {
   tags: string[];
   deleted: boolean;
   shareURL: string;
@@ -31,4 +31,19 @@ export type NoteData = {
   creationDate: number;
 };
 
-export type HandledData = IndexResponse<NoteData> & { type: "index" };
+export type Change<T> = {
+  clientid: string;
+  cv: string;
+  ev: number;
+  sv?: number;
+  id: string;
+  o: string;
+  v: unknown; // TODO type diffs
+  ccids: string[];
+  d?: T;
+};
+
+export type HandledData =
+  | IndexResponse<Note> & { type: "index" }
+  | { message: string; type: "cv" }
+  | { changes: Change<Note>[]; type: "c" };

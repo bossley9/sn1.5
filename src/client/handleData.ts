@@ -1,20 +1,35 @@
-import { logError } from "../logger.ts";
-import { Storage } from "../storage.ts";
+import { Client } from "./types.ts";
+import { initialSync } from "./sync.ts";
+import { logInfo } from "../logger.ts";
 import type { HandledData } from "../simperium/types.ts";
 
 type HandleDataProps = {
   data: HandledData;
-  storage: Storage;
+  client: Client;
 };
-export const handleData = async ({ data, storage }: HandleDataProps) => {
+export const handleData = async ({ data, client }: HandleDataProps) => {
   switch (data.type) {
     case "index": {
-      await storage.set("cv", data.current);
+      await client.storage.set("cv", data.current);
       // TODO write note data to storage
       break;
     }
-    default: {
-      logError(`Unknown message type "${data.type}" from server. Ignoring.`);
+    case "cv": {
+      if (data.message === "?") {
+        logInfo("Change version not found. Making fresh sync...");
+        await initialSync(client);
+      }
+      break;
+    }
+    case "c": {
+      if (data.changes.length === 0) {
+        logInfo("Already up to date.");
+      }
+
+      for (const _change of data.changes) {
+        // TODO write note changes to storage
+      }
+      break;
     }
   }
 };
