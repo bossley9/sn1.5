@@ -1,3 +1,5 @@
+import type { JSONDiff, JSONDiffOperation } from "../jsondiff/diff.ts";
+
 export type AuthorizeResponse = {
   access_token: string;
   userid: string;
@@ -31,19 +33,23 @@ export type Note = {
   creationDate: number;
 };
 
-export type Change<T> = {
+type BaseChange<T> = {
   clientid: string;
   cv: string;
   ev: number;
   sv?: number;
   id: string;
-  o: string;
-  v: unknown; // TODO type diffs
-  ccids: string[];
-  d?: T;
+  o: JSONDiffOperation;
+  v: JSONDiff<T>;
+  d?: unknown;
+  error?: number;
+};
+
+export type DChange<T> = BaseChange<T> & {
+  ccid?: string[];
 };
 
 export type HandledData =
   | IndexResponse<Note> & { type: "index" }
   | { message: string; type: "cv" }
-  | { changes: Change<Note>[]; type: "c" };
+  | { changes: DChange<Note>[]; type: "c" };

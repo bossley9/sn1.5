@@ -2,7 +2,7 @@ import { apiFetch } from "../apifetch.ts";
 import { logDebug, logError } from "../logger.ts";
 import type {
   AuthorizeResponse,
-  Change,
+  DChange,
   HandledData,
   IndexMessageProps,
   IndexResponse,
@@ -170,7 +170,7 @@ export class Simperium {
           break;
         }
         case "c": {
-          const changes: Change<Note>[] = JSON.parse(
+          const changes: DChange<Note>[] = JSON.parse(
             dataNoChannel.substring("c:".length),
           );
           await this.dataHandler?.({ changes, type: "c" });
