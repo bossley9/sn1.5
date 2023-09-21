@@ -1,9 +1,10 @@
 import { logDebug, logError, logInfo } from "../logger.ts";
-import { Client } from "./types.ts";
+import { STORED_KEYS } from "./constants.ts";
+import type { Client } from "./types.ts";
 
 export async function authenticate(client: Client) {
   logInfo("Authenticating...");
-  const at = client.storage.get<string>("at");
+  const at = client.storage.get<string>(STORED_KEYS.authToken);
   if (at) {
     logDebug({ authToken: at });
     logInfo("Authentication token found.");
@@ -23,7 +24,7 @@ export async function authenticate(client: Client) {
   }
 
   logDebug({ authToken: accessToken });
-  await client.storage.set("at", accessToken);
+  await client.storage.set(STORED_KEYS.authToken, accessToken);
 }
 
 type Credentials = { username: string; password: string };

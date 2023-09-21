@@ -7,6 +7,6 @@ type PrimitiveJSONDiff<T> = {
 
 export type JSONDiff<T> = T extends object
   ? (T extends unknown[] ? PrimitiveJSONDiff<T> : {
-    [K in keyof T]: JSONDiff<T[K]>;
+    [K in keyof T]?: JSONDiff<T[K]>;
   })
   : PrimitiveJSONDiff<T>;

@@ -7,3 +7,16 @@ export type Client = {
   storage: Storage;
   simp: Simperium;
 };
+
+export type StoredNote = {
+  /**
+   * Note version.
+   */
+  v: number;
+  /**
+   * Note name.
+   */
+  n: string;
+};
+
+export type StoredNotes = Record<string, StoredNote>;

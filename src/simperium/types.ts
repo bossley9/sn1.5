@@ -16,7 +16,7 @@ export type IndexResponse<T> = {
   current: string;
   index: {
     id: string;
-    v: string;
+    v: number;
     d?: T;
   }[];
   mark?: string;
@@ -46,7 +46,7 @@ type BaseChange<T> = {
 };
 
 export type DChange<T> = BaseChange<T> & {
-  ccid?: string[];
+  ccids?: string[];
 };
 
 export type HandledData =

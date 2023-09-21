@@ -6,7 +6,9 @@ import type { Client } from "./types.ts";
 export async function newClient(): Promise<Client> {
   // initializing project directory
   const homeDir = Deno.env.get("HOME") || ".";
-  const projectDir = homeDir + "/Documents/sn";
+  // const projectDir = homeDir + "/Documents/sn";
+  // TODO for testing purposes only
+  const projectDir = homeDir + "/Documents/sn2";
   await Deno.mkdir(projectDir, { recursive: true });
 
   // initializing version control
