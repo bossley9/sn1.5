@@ -37,7 +37,7 @@ function applyStringDiffSegment(
 
   switch (operation) {
     case "+": {
-      const value = diffSegment.substring(1);
+      const value = decodeURI(diffSegment.substring(1));
       end = src.substring(0, newIndex) + value + src.substring(newIndex);
       newIndex = newIndex + value.length;
       break;

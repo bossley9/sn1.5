@@ -74,7 +74,7 @@ export class Simperium {
       this.connection?.addEventListener("message", (e: MessageEvent) => {
         const message = String(e.data);
         if (message.startsWith("0:auth:")) {
-          const response = message.substring(7);
+          const response = message.substring("0:auth:".length);
           if (!response.startsWith("{")) {
             clearTimeout(timer);
             this.sendHeartbeatMessage(0);
