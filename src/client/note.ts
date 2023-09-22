@@ -1,21 +1,20 @@
 import { STORED_KEYS } from "./constants.ts";
-import type { Note } from "../simperium/types.ts";
 import type { Client, StoredNote, StoredNotes } from "./types.ts";
 
 type Props = {
   client: Client;
-  note: Note;
+  content: string;
   id: string;
   version: number;
 };
 
-export async function writeNote({ client, note, id, version }: Props) {
-  const noteName = getNoteName(client, id, note);
-  const filename = client.projectDir + "/" + noteName + ".md";
+export async function writeNote({ client, content, id, version }: Props) {
+  const noteName = getNoteName(client, id, content);
+  const filename = getFileName(client, noteName);
   const versionFilename = client.versionDir + "/" + noteName + ".md";
 
-  await Deno.writeTextFile(filename, note.content);
-  await Deno.writeTextFile(versionFilename, note.content);
+  await Deno.writeTextFile(filename, content);
+  await Deno.writeTextFile(versionFilename, content);
 
   const updatedNote: StoredNote = {
     v: version,
@@ -25,18 +24,32 @@ export async function writeNote({ client, note, id, version }: Props) {
   await client.storage.set(STORED_KEYS.notes, { ...notes, [id]: updatedNote });
 }
 
-function getNoteName(client: Client, id: string, note: Note) {
+export async function readNote(
+  client: Client,
+  noteID: string,
+): Promise<string> {
+  const notes = client.storage.get<StoredNotes>(STORED_KEYS.notes) || {};
+  const note = notes[noteID];
+  const filename = getFileName(client, note.n);
+  return await Deno.readTextFile(filename);
+}
+
+function getFileName(client: Client, noteName: string): string {
+  return client.projectDir + "/" + noteName + ".md";
+}
+
+function getNoteName(client: Client, id: string, content: string) {
   const notes = client.storage.get<StoredNotes>(STORED_KEYS.notes) || {};
   if (notes[id]) {
     return notes[id].n;
   }
-  return generateID(note.content) + "-" + id;
+  return generateID(content) + "-" + id;
 }
 
 /**
  * Given a string of text, return a url-safe string identifier.
  */
-function generateID(text: string): string {
+export function generateID(text: string): string {
   const maxLen = 32;
 
   // 1. remove additional text lines

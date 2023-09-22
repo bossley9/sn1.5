@@ -1,7 +1,9 @@
+import { logInfo } from "../logger.ts";
+import { readNote, writeNote } from "./note.ts";
+import { ApplyStringDiff } from "../jsondiff/apply.ts";
+import { STORED_KEYS } from "./constants.ts";
 import type { Client } from "./types.ts";
 import type { DChange, Note } from "../simperium/types.ts";
-import { logInfo } from "../logger.ts";
-import { STORED_KEYS } from "./constants.ts";
 
 export async function applyChange(
   client: Client,
@@ -21,13 +23,24 @@ export async function applyChange(
 
   logInfo(`Updating change version to ${change.cv}...`);
   // TODO uncomment
-  // client.storage.set(STORED_KEYS.changeVersion, change.cv);
-  // TODO write file changes to storage
+  client.storage.set(STORED_KEYS.changeVersion, change.cv);
 }
 
 async function applyUpdateChange(client: Client, change: DChange<Note>) {
+  if (!change.v.content) return;
   const noteID = change.id;
+
   logInfo(`Updating note ${noteID}...`);
+  const content = await readNote(client, noteID);
+
+  logInfo(`Applying change ${change.cv} to note ${noteID}...`);
+  const modifiedContent = ApplyStringDiff(change.v.content, content);
+  await writeNote({
+    client,
+    content: modifiedContent,
+    id: noteID,
+    version: change.ev,
+  });
 }
 
 async function applyCreationChange(client: Client, change: DChange<Note>) {

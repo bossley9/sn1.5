@@ -1,4 +1,4 @@
-import type { JSONDiff, JSONDiffOperation } from "../jsondiff/diff.ts";
+import type { JSONDiff, JSONDiffOperation } from "../jsondiff/types.ts";
 
 export type AuthorizeResponse = {
   access_token: string;
