@@ -11,7 +11,7 @@ type Props = {
 export async function writeNote({ client, content, id, version }: Props) {
   const noteName = getNoteName(client, id, content);
   const filename = getFileName(client, noteName);
-  const versionFilename = client.versionDir + "/" + noteName + ".md";
+  const versionFilename = getVersionFileName(client, noteName);
 
   await Deno.writeTextFile(filename, content);
   await Deno.writeTextFile(versionFilename, content);
@@ -34,8 +34,12 @@ export async function readNote(
   return await Deno.readTextFile(filename);
 }
 
-function getFileName(client: Client, noteName: string): string {
+export function getFileName(client: Client, noteName: string): string {
   return client.projectDir + "/" + noteName + ".md";
+}
+
+export function getVersionFileName(client: Client, noteName: string): string {
+  return client.versionDir + "/" + noteName + ".md";
 }
 
 function getNoteName(client: Client, id: string, content: string) {

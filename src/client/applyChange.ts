@@ -1,16 +1,21 @@
-import { logInfo } from "../logger.ts";
-import { readNote, writeNote } from "./note.ts";
+import { logDebug, logInfo } from "../logger.ts";
+import {
+  getFileName,
+  getVersionFileName,
+  readNote,
+  writeNote,
+} from "./note.ts";
 import { ApplyStringDiff } from "../jsondiff/apply.ts";
 import { STORED_KEYS } from "./constants.ts";
-import type { Client } from "./types.ts";
+import type { Client, StoredNotes } from "./types.ts";
 import type { DChange, Note } from "../simperium/types.ts";
 
 export async function applyChange(
   client: Client,
   change: DChange<Note>,
 ): Promise<void> {
-  console.log({ change });
-  if (change.v.creationDate?.o === "+") {
+  logDebug(change);
+  if (change.v?.creationDate?.o === "+") {
     await applyCreationChange(client, change);
   } else if (change.o === "-") {
     await applyDeletionChange(client, change);
@@ -22,7 +27,6 @@ export async function applyChange(
   }
 
   logInfo(`Updating change version to ${change.cv}...`);
-  // TODO uncomment
   client.storage.set(STORED_KEYS.changeVersion, change.cv);
 }
 
@@ -45,10 +49,29 @@ async function applyUpdateChange(client: Client, change: DChange<Note>) {
 
 async function applyCreationChange(client: Client, change: DChange<Note>) {
   const noteID = change.id;
+  const content = change.v.content?.v;
+  if (!content) return;
+
   logInfo(`Creating note ${noteID}...`);
+  await writeNote({ client, content, id: noteID, version: change.ev });
 }
 
 async function applyDeletionChange(client: Client, change: DChange<Note>) {
   const noteID = change.id;
+
   logInfo(`Deleting note ${noteID}...`);
+  const notes = client.storage.get<StoredNotes>(STORED_KEYS.notes) || {};
+  const note = notes[noteID];
+
+  const filename = getFileName(client, note.n);
+  const versionFilename = getVersionFileName(client, note.n);
+  try {
+    await Deno.remove(filename);
+    await Deno.remove(versionFilename);
+  } catch {
+    // silently ignore errors
+  }
+
+  delete notes[noteID];
+  await client.storage.set(STORED_KEYS.notes, notes);
 }
