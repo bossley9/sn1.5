@@ -42,12 +42,14 @@ type BaseChange<T> = {
   o: JSONDiffOperation;
   v: JSONDiff<T>;
   d?: unknown;
-  error?: number;
 };
 
 export type DChange<T> = BaseChange<T> & {
+  error?: number;
   ccids?: string[];
 };
+
+export type UChange<T> = Omit<BaseChange<T>, "clientid" | "cv" | "ev">;
 
 export type HandledData =
   | IndexResponse<Note> & { type: "index" }

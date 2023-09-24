@@ -8,6 +8,10 @@ export function logInfo(...args: unknown[]) {
   console.log("%cInfo", "color: cyan", ...args);
 }
 
+export function logWarning(message: string) {
+  console.log(`%cWarning ${message}`, "color: yellow");
+}
+
 export function logError(...args: unknown[]) {
   console.log("%cError", "color: red", ...args);
 }

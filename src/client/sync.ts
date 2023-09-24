@@ -1,5 +1,6 @@
-import { logFatal, logInfo } from "../logger.ts";
+import { logDebug, logFatal, logInfo, logWarning } from "../logger.ts";
 import { STORED_KEYS } from "./constants.ts";
+import { GetLocalDiffs } from "./localdiffs.ts";
 import type { Client } from "./types.ts";
 
 export async function sync(client: Client) {
@@ -51,7 +52,13 @@ async function updateSync(client: Client) {
 
   logInfo(`Syncing from version ${changeVersion}...`);
 
-  // TODO check for local diffs first
+  const diffs = await GetLocalDiffs(client);
+  if (diffs) {
+    logWarning("Local diffs found. Please upload changes before syncing.");
+    logDebug({ diffs });
+    // TODO pretty print local diffs
+    Deno.exit(0);
+  }
   client.simp.sendChangeVersionMessage(changeVersion);
 
   await client.simp.settleAllMessages();

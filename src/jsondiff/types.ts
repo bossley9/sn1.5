@@ -1,4 +1,10 @@
-export type JSONDiffOperation = "+" | "-" | "=" | "d" | "r" | "M";
+export type JSONDiffOperation =
+  | "+" // insert
+  | "-" // delete
+  | "=" // equal
+  | "d" // diff match patch
+  | "r" // replace
+  | "M"; // modify
 
 type PrimitiveJSONDiff<T> = {
   o: JSONDiffOperation;
